@@ -1,0 +1,17 @@
+{
+  "name": "ControlTracker",
+  "short_name": "ControlTracker",
+  "description": "App per tracciamento ore controllo biglietti Ticino",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffde00",
+  "theme_color": "#ffde00",
+  "icons": [
+    {
+      "src": "control_tracker_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

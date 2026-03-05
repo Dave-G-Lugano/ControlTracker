@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ControlTracker - Ticino</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="control_tracker_icon.png">
+    <link rel="icon" type="image/png" href="control_tracker_icon.png">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --bg-color: #ffde00;
+            --card-bg: #ffffff;
+            --danger: #e63946;
+            --text-main: #000000;
+            --text-muted: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            padding-bottom: 40px;
+        }
+
+        header {
+            margin-bottom: 25px;
+            padding-top: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: #000;
+        }
+
+        .icon {
+            display: flex;
+            align-items: center;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 3px solid #000;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 8px 8px 0px 0px #000;
+            margin-bottom: 25px;
+        }
+
+        .timer-card {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .selectors-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 20px auto;
+        }
+
+        .selector-group {
+            text-align: left;
+        }
+
+        .selector-group label {
+            display: block !important;
+            font-size: 0.75rem;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            font-weight: 800;
+            text-align: left;
+        }
+
+        select {
+            width: 100%;
+            background: #fff;
+            border: 2px solid #000;
+            color: #000;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            margin: 10px 0 25px 0;
+            letter-spacing: -0.03em;
+            color: #000;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 280px;
+            padding: 18px 30px;
+            border-radius: 100px;
+            border: 3px solid #000;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-start {
+            background: #000;
+            color: #fff;
+        }
+
+        .btn-start:active {
+            background: #333;
+            transform: translateY(4px);
+        }
+
+        .btn-stop {
+            background: var(--danger);
+            color: white;
+        }
+
+        .stats-section h2,
+        .history-section h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 15px;
+            padding-left: 5px;
+            text-transform: uppercase;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto 30px auto;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 4px 4px 0px 0px #000;
+        }
+
+        .stat-name {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 3px 3px 0px 0px #000;
+        }
+
+        .history-info .h-team {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .history-info .h-company {
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .history-info .h-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .manual-form-container,
+        .lines-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 1000;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .lines-screen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #000;
+        }
+
+        .line-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .line-input-group input {
+            flex: 1;
+            padding: 15px;
+            border: 3px solid #000;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .line-chip-container {
+            margin-top: 20px;
+        }
+
+        .company-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 15px;
+            border: 2px solid #000;
+        }
+
+        .company-name-title {
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .line-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .line-chip {
+            background: #000;
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .line-chip .remove-line {
+            color: #ffde00;
+            font-size: 1rem;
+            margin-left: 5px;
+        }
+
+        /* Tastierino Numerico */
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 280px;
+            margin: 25px auto;
+        }
+
+        .numpad-btn {
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #000;
+            box-shadow: 4px 4px 0px 0px #000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+
+        .numpad-btn:active {
+            transform: translateY(2px);
+            box-shadow: 2px 2px 0px 0px #000;
+        }
+
+        .numpad-btn.ok-btn {
+            background: #000;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .numpad-btn.del-btn {
+            background: #eee;
+        }
+
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status-in-progress {
+            background: #ffde00;
+            color: #000;
+        }
+
+        .status-modified {
+            background: #eee;
+            color: #666;
+        }
+
+        .status-manual {
+            background: #e0f2f1;
+            color: #00897b;
+        }
+
+        .manual-form-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manual-form {
+            background: #fff;
+            padding: 25px;
+            border: 3px solid #000;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .form-row {
+            margin-bottom: 15px;
+        }
+
+        .form-row label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .form-row input,
+        .form-row select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #000;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: #eee;
+            color: #000;
+            flex: 1;
+        }
+
+        .btn-save {
+            background: #000;
+            color: #fff;
+            flex: 2;
+        }
+
+        .history-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-duration {
+            font-weight: 800;
+            color: #000;
+            margin-right: 2px;
+        }
+
+        .action-btn {
+            background: #f0f0f0;
+            border: 1px solid #000;
+            border-radius: 8px;
+            padding: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .btn-text-only {
+            background: none;
+            border: none;
+            color: #000;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: underline;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 380px) {
+            .timer-display {
+                font-size: 3.2rem;
+            }
+
+            .selectors-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container" id="main-view">
+        <header>
+            <div class="logo">
+                <span class="icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32" stroke="black" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </span>
+                <h1>ControlTracker</h1>
+            </div>
+        </header>
+
+        <main>
+            <section class="card timer-card">
+                <div class="selectors-grid">
+                    <div class="selector-group">
+                        <label for="team-select">Team</label>
+                        <select id="team-select">
+                            <option value="Lugano">Lugano</option>
+                            <option value="Bellinzona">Bellinzona</option>
+                        </select>
+                    </div>
+                    <div class="selector-group">
+                        <label for="company-select">Compagnia</label>
+                        <select id="company-select"></select>
+                    </div>
+                    <div class="selector-group">
+                        <label for="multiplier-select">Controllori</label>
+                        <select id="multiplier-select">
+                            <option value="1">1x</option>
+                            <option value="2">2x</option>
+                            <option value="3" selected>3x</option>
+                            <option value="4">4x</option>
+                            <option value="5">5x</option>
+                            <option value="6">6x</option>
+                            <option value="7">7x</option>
+                            <option value="8">8x</option>
+                            <option value="9">9x</option>
+                            <option value="10">10x</option>
+                        </select>
+                    </div>
+                    <div class="selector-group">
+                        <label>Gestione</label>
+                        <button onclick="openLinesScreen()"
+                            style="width: 100%; background: #000; color: #fff; border: 2px solid #000; border-radius: 12px; padding: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">LINEE
+                            ➔</button>
+                    </div>
+                </div>
+
+                <div class="timer-display" id="timer">00:00:00</div>
+
+                <button id="main-btn" class="btn btn-start">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-text">INIZIA CONTROLLO</span>
+                </button>
+                <button id="add-manual-btn" class="btn-text-only"
+                    style="margin-top: 15px; opacity: 1; text-decoration: none; border: 2px solid #000; padding: 8px 15px; border-radius: 12px; font-size: 0.75rem;">➕
+                    AGGIUNGI CONTROLLO MANUALE</button>
+            </section>
+
+            <section class="stats-section">
+                <h2>Riepilogo Ore</h2>
+                <div id="stats-container" class="stats-grid"></div>
+            </section>
+
+            <section class="history-section">
+                <h2>Sessioni Recenti</h2>
+                <div id="history-list" class="history-list"></div>
+            </section>
+        </main>
+
+        <footer>
+            <button id="reset-data" class="btn-text-only">Azzera tutti i dati</button>
+            <p
+                style="font-size: 0.65rem; opacity: 0.4; margin-top: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #000;">
+                developed by Gaspa</p>
+        </footer>
+    </div>
+
+    <div id="manual-modal" class="manual-form-container">
+        <div class="manual-form">
+            <h2 style="margin-bottom: 20px; font-size: 1.2rem;">Inserimento Manuale</h2>
+            <div class="form-row">
+                <label>Team</label>
+                <select id="m-team-select">
+                    <option value="Lugano">Lugano</option>
+                    <option value="Bellinzona">Bellinzona</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Compagnia</label>
+                <select id="m-company-select"></select>
+            </div>
+            <div class="form-row">
+                <label>Controllori</label>
+                <select id="m-multiplier-select">
+                    <option value="1">1x</option>
+                    <option value="2">2x</option>
+                    <option value="3" selected>3x</option>
+                    <option value="4">4x</option>
+                    <option value="5">5x</option>
+                    <option value="6">6x</option>
+                    <option value="7">7x</option>
+                    <option value="8">8x</option>
+                    <option value="9">9x</option>
+                    <option value="10">10x</option>
+                </select>
+            </div>
+            <div class="form-row" style="display: flex; gap: 10px;">
+                <div style="flex:1">
+                    <label>Inizio</label>
+                    <input type="time" id="m-start-time">
+                </div>
+                <div style="flex:1">
+                    <label>Fine</label>
+                    <input type="time" id="m-end-time">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-cancel" onclick="closeManualModal()">ANNULLA</button>
+                <button class="btn btn-save" onclick="saveManualEntry()">SALVA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schermata Linee -->
+    <div id="lines-screen" class="lines-screen">
+        <header>
+            <div class="logo" style="justify-content: center;">
+                <span class="icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </span>
+                <h1>ControlTracker</h1>
+            </div>
+        </header>
+
+        <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
+            <button class="btn-text-only" onclick="closeLinesScreen()"
+                style="margin-bottom: 20px; font-weight: 800; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 8px;">⬅
+                TORNA ALLA HOME</button>
+
+            <h2
+                style="margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; letter-spacing: -0.02em; text-align: center;">
+                Controllo Linee</h2>
+
+            <section class="card" style="max-width: 400px; margin: 0 auto;">
+                <div class="selectors-grid" style="grid-template-columns: 1fr;">
+                    <div class="selector-group">
+                        <label>Team</label>
+                        <select id="l-team-select">
+                            <option value="Lugano">Lugano</option>
+                            <option value="Bellinzona">Bellinzona</option>
+                        </select>
+                    </div>
+                    <div class="selector-group">
+                        <label>Compagnia</label>
+                        <select id="l-company-select"></select>
+                    </div>
+                </div>
+
+                <div class="line-input-group" style="margin-top: 20px; justify-content: center;">
+                    <input type="text" id="l-line-number" placeholder="---" readonly
+                        style="max-width: 150px; font-size: 2rem; background: transparent; border: none; border-bottom: 4px solid #000; border-radius: 0;">
+                </div>
+
+                <div class="numpad">
+                    <div class="numpad-btn" onclick="pressNum('1')">1</div>
+                    <div class="numpad-btn" onclick="pressNum('2')">2</div>
+                    <div class="numpad-btn" onclick="pressNum('3')">3</div>
+                    <div class="numpad-btn" onclick="pressNum('4')">4</div>
+                    <div class="numpad-btn" onclick="pressNum('5')">5</div>
+                    <div class="numpad-btn" onclick="pressNum('6')">6</div>
+                    <div class="numpad-btn" onclick="pressNum('7')">7</div>
+                    <div class="numpad-btn" onclick="pressNum('8')">8</div>
+                    <div class="numpad-btn" onclick="pressNum('9')">9</div>
+                    <div class="numpad-btn del-btn" onclick="pressNum('DEL')">⌫</div>
+                    <div class="numpad-btn" onclick="pressNum('0')">0</div>
+                    <div class="numpad-btn ok-btn" onclick="addLine()">OK</div>
+                </div>
+            </section>
+
+            <div id="lines-container" class="line-chip-container">
+                <!-- Gruppi di linee per compagnia -->
+            </div>
+
+            <div style="text-align: center; margin-top: 40px; padding-bottom: 40px;">
+                <button class="btn-text-only" style="color: #ff0000; opacity: 1; font-size: 0.8rem;"
+                    onclick="clearAllLines()">AZZERA TUTTE LE LINEE</button>
+                <p
+                    style="font-size: 0.65rem; opacity: 0.4; margin-top: 20px; font-weight: 700; text-transform: uppercase;">
+                    developed by Gaspa</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const companiesByTeam = {
+            "Lugano": ["TPL", "ARL", "APL", "SNL", "AMSA", "FLP"],
+            "Bellinzona": ["FART", "APB", "ABL", "BPB"]
+        };
+
+        let timerInterval = null;
+        let startTime = 0;
+        let elapsedTime = 0;
+        let sessions = JSON.parse(localStorage.getItem('workSessions_v2')) || [];
+
+        const timerDisplay = document.getElementById('timer');
+        const mainBtn = document.getElementById('main-btn');
+        const btnIcon = mainBtn.querySelector('.btn-icon');
+        const btnText = mainBtn.querySelector('.btn-text');
+        const teamSelect = document.getElementById('team-select');
+        const companySelect = document.getElementById('company-select');
+        const multiplierSelect = document.getElementById('multiplier-select');
+        const statsContainer = document.getElementById('stats-container');
+        const historyList = document.getElementById('history-list');
+        const resetBtn = document.getElementById('reset-data');
+        const addManualBtn = document.getElementById('add-manual-btn');
+
+        const mModal = document.getElementById('manual-modal');
+        const mTeam = document.getElementById('m-team-select');
+        const mCompany = document.getElementById('m-company-select');
+
+        const lScreen = document.getElementById('lines-screen');
+        const lTeam = document.getElementById('l-team-select');
+        const lCompany = document.getElementById('l-company-select');
+        const lLineInput = document.getElementById('l-line-number');
+        const lContainer = document.getElementById('lines-container');
+
+        // Caricamento Linee
+        let checkedLines = JSON.parse(localStorage.getItem('checkedLines')) || [];
+
+        // Inizializzazione tendine
+        teamSelect.addEventListener('change', updateCompanies);
+        mTeam.addEventListener('change', () => updateCompaniesManual());
+        lTeam.addEventListener('change', () => updateCompaniesLines());
+        addManualBtn.addEventListener('click', openManualModal);
+        // Registrazione Service Worker per PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => { });
+        }
+
+        updateCompanies();
+        checkRunningSession();
+        updateUI();
+
+        mainBtn.addEventListener('click', toggleTimer);
+        resetBtn.addEventListener('click', clearData);
+
+        function checkRunningSession() {
+            const active = JSON.parse(localStorage.getItem('activeSession'));
+            if (active) {
+                teamSelect.value = active.team;
+                updateCompanies();
+                companySelect.value = active.company;
+                startTime = active.startTime;
+                timerInterval = setInterval(updateTimerDisplay, 100);
+                mainBtn.classList.remove('btn-start');
+                mainBtn.classList.add('btn-stop');
+                btnIcon.textContent = '■';
+                btnText.textContent = 'FERMA CONTROLLO';
+                teamSelect.disabled = true;
+                companySelect.disabled = true;
+                multiplierSelect.disabled = true;
+            }
+        }
+
+        function updateCompanies() {
+            const team = teamSelect.value;
+            const list = companiesByTeam[team];
+            companySelect.innerHTML = '';
+            list.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                companySelect.appendChild(opt);
+            });
+        }
+
+        function updateCompaniesManual() {
+            const team = mTeam.value;
+            const list = companiesByTeam[team];
+            mCompany.innerHTML = '';
+            list.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                mCompany.appendChild(opt);
+            });
+        }
+
+        function openManualModal() {
+            updateCompaniesManual();
+            mModal.style.display = 'flex';
+            document.getElementById('main-view').style.display = 'none';
+        }
+
+        function closeManualModal() {
+            mModal.style.display = 'none';
+            document.getElementById('main-view').style.display = 'block';
+        }
+
+        function saveManualEntry() {
+            const startTime = document.getElementById('m-start-time').value;
+            const endTime = document.getElementById('m-end-time').value;
+            if (!startTime || !endTime) return alert('Inserisci orari!');
+
+            const [h1, m1] = startTime.split(':').map(Number);
+            const [h2, m2] = endTime.split(':').map(Number);
+            let diffMs = ((h2 * 60 + m2) - (h1 * 60 + m1)) * 60000;
+            if (diffMs < 0) diffMs += 24 * 60 * 60000; // Se supera mezzanotte
+
+            saveSession(mTeam.value, mCompany.value, diffMs, document.getElementById('m-multiplier-select').value, 'manual', startTime, endTime);
+            closeManualModal();
+            updateUI();
+        }
+
+        function updateCompaniesLines() {
+            const team = lTeam.value;
+            const list = companiesByTeam[team];
+            lCompany.innerHTML = '';
+            list.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                lCompany.appendChild(opt);
+            });
+        }
+
+        function openLinesScreen() {
+            updateCompaniesLines();
+            renderLines();
+            lScreen.style.display = 'block';
+            document.getElementById('main-view').style.display = 'none';
+        }
+
+        function closeLinesScreen() {
+            lScreen.style.display = 'none';
+            document.getElementById('main-view').style.display = 'block';
+        }
+
+        function pressNum(val) {
+            if (val === 'DEL') {
+                lLineInput.value = lLineInput.value.slice(0, -1);
+            } else {
+                if (lLineInput.value.length < 5) {
+                    lLineInput.value += val;
+                }
+            }
+        }
+
+        function addLine() {
+            const line = lLineInput.value.trim();
+            const company = lCompany.value;
+            if (!line) return;
+
+            checkedLines.push({ company, line });
+            localStorage.setItem('checkedLines', JSON.stringify(checkedLines));
+            lLineInput.value = '';
+            renderLines();
+        }
+
+        function removeLine(index) {
+            checkedLines.splice(index, 1);
+            localStorage.setItem('checkedLines', JSON.stringify(checkedLines));
+            renderLines();
+        }
+
+        function clearAllLines() {
+            if (confirm('Azzera tutte le linee controllate?')) {
+                checkedLines = [];
+                localStorage.removeItem('checkedLines');
+                renderLines();
+            }
+        }
+
+        function renderLines() {
+            lContainer.innerHTML = '';
+            const groups = {};
+            checkedLines.forEach((item, index) => {
+                if (!groups[item.company]) groups[item.company] = [];
+                groups[item.company].push({ line: item.line, index });
+            });
+
+            Object.keys(groups).sort().forEach(company => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'company-group';
+
+                let chipsHtml = '';
+                groups[company].forEach(obj => {
+                    chipsHtml += `<div class="line-chip">${obj.line} <span class="remove-line" onclick="removeLine(${obj.index})">×</span></div>`;
+                });
+
+                groupDiv.innerHTML = `
+                    <div class="company-name-title">${company}</div>
+                    <div class="line-chips">${chipsHtml}</div>
+                `;
+                lContainer.appendChild(groupDiv);
+            });
+        }
+        function toggleTimer() {
+            if (timerInterval) stopTimer();
+            else startTimer();
+        }
+
+        function startTimer() {
+            const now = new Date();
+            startTime = Date.now();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            localStorage.setItem('activeSession', JSON.stringify({
+                startTime: startTime,
+                startTimeStr: timeStr,
+                team: teamSelect.value,
+                company: companySelect.value,
+                multiplier: multiplierSelect.value
+            }));
+
+            timerInterval = setInterval(updateTimerDisplay, 100);
+            mainBtn.classList.remove('btn-start');
+            mainBtn.classList.add('btn-stop');
+            btnIcon.textContent = '■';
+            btnText.textContent = 'FERMA CONTROLLO';
+            teamSelect.disabled = true;
+            companySelect.disabled = true;
+            multiplierSelect.disabled = true;
+            updateUI(); // Per mostrare "in corso"
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            const active = JSON.parse(localStorage.getItem('activeSession'));
+            const finalTime = Date.now() - startTime;
+            const now = new Date();
+            const timeEndStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            if (finalTime > 1000 && active) {
+                saveSession(active.team, active.company, finalTime, active.multiplier, 'completed', active.startTimeStr, timeEndStr);
+            }
+
+            localStorage.removeItem('activeSession');
+            elapsedTime = 0;
+            updateTimerDisplay();
+            mainBtn.classList.remove('btn-stop');
+            mainBtn.classList.add('btn-start');
+            btnIcon.textContent = '▶';
+            btnText.textContent = 'INIZIA CONTROLLO';
+            teamSelect.disabled = false;
+            companySelect.disabled = false;
+            multiplierSelect.disabled = false;
+            updateUI();
+        }
+
+        function updateTimerDisplay() {
+            if (timerInterval) elapsedTime = Date.now() - startTime;
+            const totalSeconds = Math.floor(elapsedTime / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function saveSession(team, company, duration, multiplier, status = 'completed', startStr = '', endStr = '') {
+            const session = {
+                id: Date.now(),
+                team: team,
+                company: company,
+                duration: duration,
+                multiplier: parseInt(multiplier) || 1,
+                date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }),
+                fullDate: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                startTimeStr: startStr,
+                endTimeStr: endStr,
+                status: status, // 'completed', 'manual', 'modified'
+                modTime: ''
+            };
+            sessions.unshift(session);
+            if (sessions.length > 50) sessions.pop();
+            localStorage.setItem('workSessions_v2', JSON.stringify(sessions));
+        }
+
+        function updateUI() {
+            updateStats();
+            updateHistory();
+        }
+
+        function updateStats() {
+            const totals = {};
+            sessions.forEach(s => {
+                const key = `${s.team} - ${s.company}`;
+                const weightedDuration = s.duration * (s.multiplier || 1);
+                totals[key] = (totals[key] || 0) + weightedDuration;
+            });
+            statsContainer.innerHTML = '';
+            const keys = Object.keys(totals);
+            if (keys.length === 0) {
+                statsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #000; font-size: 0.9rem; font-weight: 700;">Nessun dato</p>';
+                return;
+            }
+            keys.sort().forEach(key => {
+                const hours = (totals[key] / (1000 * 60 * 60)).toFixed(2);
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `<div class="stat-name">${key}</div><div class="stat-value">${hours}h</div>`;
+                statsContainer.appendChild(card);
+            });
+        }
+
+        function updateHistory() {
+            historyList.innerHTML = '';
+
+            // Sessione in corso
+            const active = JSON.parse(localStorage.getItem('activeSession'));
+            if (active) {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.style.borderColor = '#ffde00';
+                item.innerHTML = `
+                    <div class="history-info">
+                        <div class="h-team">${active.team} <span class="status-badge status-in-progress">IN CORSO</span></div>
+                        <div class="h-company">${active.company} (${active.multiplier}x)</div>
+                        <div class="h-date">Iniziato alle ${active.startTimeStr}</div>
+                    </div>
+                    <div class="history-actions">
+                        <span class="history-duration" id="live-hist-timer">00:00</span>
+                    </div>`;
+                historyList.appendChild(item);
+            }
+
+            if (sessions.length === 0 && !active) {
+                historyList.innerHTML = '<p style="text-align: center; color: #000; font-size: 0.9rem; font-weight: 700;">Nessuna sessione</p>';
+                return;
+            }
+
+            sessions.slice(0, 10).forEach((s, index) => {
+                const totalMins = Math.floor(s.duration / (1000 * 60));
+                const h = Math.floor(totalMins / 60);
+                const m = totalMins % 60;
+                const durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                const multTag = s.multiplier > 1 ? `<span style="font-size: 0.7rem; background: #000; color: #fff; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">${s.multiplier}x</span>` : '';
+
+                let statusLabel = '';
+                if (s.status === 'manual') statusLabel = '<span class="status-badge status-manual">AGGIUNTO MANUALMENTE</span>';
+                else if (s.status === 'modified') statusLabel = `<span class="status-badge status-modified">(modificato ${s.modTime})</span>`;
+
+                let timeRange = s.startTimeStr && s.endTimeStr ? `${s.startTimeStr} - ${s.endTimeStr}` : s.date;
+                if (s.status === 'modified' && s.calculatedEndTimeStr) {
+                    timeRange = `${s.startTimeStr} - ${s.endTimeStr} (${s.calculatedEndTimeStr})`;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="history-info">
+                        <div class="h-team">${s.team} ${multTag}</div>
+                        <div class="h-company">${s.company} ${statusLabel}</div>
+                        <div class="h-date">${timeRange}</div>
+                    </div>
+                    <div class="history-actions">
+                        <span class="history-duration">${durationStr}</span>
+                        <button class="action-btn" onclick="editSession(${index})">✏️</button>
+                        <button class="action-btn delete-btn" onclick="deleteSession(${index})">🗑️</button>
+                    </div>`;
+                historyList.appendChild(item);
+            });
+        }
+
+        window.editSession = function (index) {
+            const s = sessions[index];
+            const oldMins = Math.floor(s.duration / (1000 * 60));
+            const oldMult = s.multiplier || 1;
+
+            const newMins = prompt(`Modifica minuti per ${s.company}:`, oldMins);
+            if (newMins === null) return;
+
+            const newMult = prompt(`Modifica numero controllori (1-10):`, oldMult);
+            if (newMult === null) return;
+
+            if (newMins !== null && !isNaN(newMins) && !isNaN(newMult)) {
+                const now = new Date();
+                const nowStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+                // Calcolo nuovo orario di fine basato sullo start originale + nuovi minuti
+                let calcEndStr = '';
+                if (s.startTimeStr) {
+                    const [h, m] = s.startTimeStr.split(':').map(Number);
+                    const startDate = new Date();
+                    startDate.setHours(h, m, 0);
+                    const endDate = new Date(startDate.getTime() + parseInt(newMins) * 60000);
+                    calcEndStr = endDate.getHours().toString().padStart(2, '0') + ':' + endDate.getMinutes().toString().padStart(2, '0');
+                }
+
+                sessions[index].duration = parseInt(newMins) * 60 * 1000;
+                sessions[index].multiplier = Math.max(1, Math.min(10, parseInt(newMult)));
+                sessions[index].status = 'modified';
+                sessions[index].modTime = nowStr;
+                sessions[index].calculatedEndTimeStr = calcEndStr;
+
+                localStorage.setItem('workSessions_v2', JSON.stringify(sessions));
+                updateUI();
+            }
+        };
+
+        window.deleteSession = function (index) {
+            if (confirm('Eliminare?')) {
+                sessions.splice(index, 1);
+                localStorage.setItem('workSessions_v2', JSON.stringify(sessions));
+                updateUI();
+            }
+        };
+
+        function clearData() {
+            if (confirm('Cancellare tutto?')) {
+                sessions = [];
+                localStorage.removeItem('workSessions_v2');
+                updateUI();
+            }
+        }
+    </script>
+</body>
+
+</html>
