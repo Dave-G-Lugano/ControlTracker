@@ -629,6 +629,55 @@
         </div>
     </div>
 
+    <!-- Schermata Edit Sessione (con tastierino) -->
+    <div id="edit-modal" class="manual-form-container">
+        <div class="manual-form" style="padding: 15px;">
+            <h2 style="margin-bottom: 10px; font-size: 1.1rem; text-align: center;">Modifica Sessione</h2>
+
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <div class="edit-field" id="edit-start-box" onclick="setEditFocus('start')"
+                    style="flex:1; text-align:center; padding: 10px; border: 2px solid #000; border-radius: 8px; cursor: pointer;">
+                    <label
+                        style="font-size: 0.7rem; font-weight: 800; display: block; margin-bottom: 2px;">INIZIO</label>
+                    <div id="edit-start-val" style="font-size: 1.2rem; font-weight: 800;">--:--</div>
+                </div>
+                <div class="edit-field" id="edit-end-box" onclick="setEditFocus('end')"
+                    style="flex:1; text-align:center; padding: 10px; border: 2px solid #eee; border-radius: 8px; cursor: pointer;">
+                    <label style="font-size: 0.7rem; font-weight: 800; display: block; margin-bottom: 2px;">FINE</label>
+                    <div id="edit-end-val" style="font-size: 1.2rem; font-weight: 800;">--:--</div>
+                </div>
+                <div class="edit-field" id="edit-mult-box" onclick="setEditFocus('mult')"
+                    style="flex:1; text-align:center; padding: 10px; border: 2px solid #eee; border-radius: 8px; cursor: pointer;">
+                    <label
+                        style="font-size: 0.7rem; font-weight: 800; display: block; margin-bottom: 2px;">MOLT.</label>
+                    <div id="edit-mult-val" style="font-size: 1.2rem; font-weight: 800;">-</div>
+                </div>
+            </div>
+
+            <div class="numpad" style="margin: 10px auto; gap: 8px; max-width: 250px;">
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('1')">1</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('2')">2</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('3')">3</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('4')">4</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('5')">5</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('6')">6</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('7')">7</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('8')">8</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('9')">9</div>
+                <div class="numpad-btn del-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('DEL')">
+                    ⌫</div>
+                <div class="numpad-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum('0')">0</div>
+                <div class="numpad-btn del-btn" style="padding: 10px; font-size: 1.2rem;" onclick="pressEditNum(':')">:
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top: 10px;">
+                <button class="btn btn-cancel" onclick="closeEditModal()">ANNULLA</button>
+                <button class="btn btn-save" onclick="saveEditSession()">SALVA</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Schermata Linee -->
     <div id="lines-screen" class="lines-screen">
         <header>
@@ -1083,57 +1132,109 @@
             });
         }
 
+        let editingIndex = -1;
+        let editFocus = 'start'; // 'start', 'end', 'mult'
+        let editStartInput = '';
+        let editEndInput = '';
+        let editMultInput = '';
+
         window.editSession = function (index) {
+            editingIndex = index;
             const s = sessions[index];
-            const oldMult = s.multiplier || 1;
 
-            const currentStart = s.calculatedStartTimeStr || s.startTimeStr || '00:00';
-            const currentEnd = s.calculatedEndTimeStr || s.endTimeStr || '00:00';
+            editStartInput = s.calculatedStartTimeStr || s.startTimeStr || '00:00';
+            editEndInput = s.calculatedEndTimeStr || s.endTimeStr || '00:00';
+            editMultInput = (s.multiplier || 1).toString();
 
-            const newStart = prompt(`Modifica orario inizio (HH:MM) per ${s.company}:`, currentStart);
-            if (newStart === null) return;
-            if (!/^\d{1,2}:\d{2}$/.test(newStart)) {
-                alert("Formato ora inizio non valido.");
+            document.getElementById('edit-start-val').textContent = editStartInput;
+            document.getElementById('edit-end-val').textContent = editEndInput;
+            document.getElementById('edit-mult-val').textContent = editMultInput + 'x';
+
+            setEditFocus('start');
+            document.getElementById('edit-modal').style.display = 'flex';
+        };
+
+        window.setEditFocus = function (focus) {
+            editFocus = focus;
+            document.getElementById('edit-start-box').style.borderColor = focus === 'start' ? '#000' : '#eee';
+            document.getElementById('edit-end-box').style.borderColor = focus === 'end' ? '#000' : '#eee';
+            document.getElementById('edit-mult-box').style.borderColor = focus === 'mult' ? '#000' : '#eee';
+        };
+
+        window.pressEditNum = function (val) {
+            let currentInput = '';
+            if (editFocus === 'start') currentInput = editStartInput;
+            else if (editFocus === 'end') currentInput = editEndInput;
+            else if (editFocus === 'mult') currentInput = editMultInput;
+
+            if (val === 'DEL') {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                if (editFocus === 'start' || editFocus === 'end') {
+                    if (currentInput.length < 5) currentInput += val;
+                } else { // mult
+                    if (currentInput.length < 2 && val !== ':') currentInput += val;
+                }
+            }
+
+            if (editFocus === 'start') {
+                editStartInput = currentInput;
+                document.getElementById('edit-start-val').textContent = editStartInput || '--:--';
+            } else if (editFocus === 'end') {
+                editEndInput = currentInput;
+                document.getElementById('edit-end-val').textContent = editEndInput || '--:--';
+            } else if (editFocus === 'mult') {
+                editMultInput = currentInput;
+                document.getElementById('edit-mult-val').textContent = editMultInput ? editMultInput + 'x' : '-';
+            }
+        };
+
+        window.closeEditModal = function () {
+            document.getElementById('edit-modal').style.display = 'none';
+        };
+
+        window.saveEditSession = function () {
+            if (!/^\d{1,2}:\d{2}$/.test(editStartInput)) {
+                alert("Formato ora inizio non valido (usa HH:MM).");
+                return;
+            }
+            if (!/^\d{1,2}:\d{2}$/.test(editEndInput)) {
+                alert("Formato ora fine non valido (usa HH:MM).");
+                return;
+            }
+            const multVal = parseInt(editMultInput);
+            if (isNaN(multVal) || multVal < 1 || multVal > 10) {
+                alert("Moltiplicatore non valido (1-10).");
                 return;
             }
 
-            const newEnd = prompt(`Modifica orario fine (HH:MM) per ${s.company}:`, currentEnd);
-            if (newEnd === null) return;
-            if (!/^\d{1,2}:\d{2}$/.test(newEnd)) {
-                alert("Formato ora fine non valido.");
-                return;
-            }
-
-            const newMult = prompt(`Modifica numero controllori (1-10):`, oldMult);
-            if (newMult === null) return;
-
-            const [sh, sm] = newStart.split(':').map(Number);
-            const [eh, em] = newEnd.split(':').map(Number);
+            const [sh, sm] = editStartInput.split(':').map(Number);
+            const [eh, em] = editEndInput.split(':').map(Number);
 
             let startMins = sh * 60 + sm;
             let endMins = eh * 60 + em;
-            if (endMins < startMins) endMins += 24 * 60; // if crosses midnight
+            if (endMins < startMins) endMins += 24 * 60;
 
             const newDurationMins = endMins - startMins;
+            const now = new Date();
+            const nowStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
-            if (!isNaN(newDurationMins) && !isNaN(newMult)) {
-                const now = new Date();
-                const nowStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const s = sessions[editingIndex];
+            if (!s.startTimeStr) s.startTimeStr = editStartInput.padStart(5, '0');
+            if (!s.endTimeStr) s.endTimeStr = editEndInput.padStart(5, '0');
 
-                if (!s.startTimeStr) s.startTimeStr = currentStart;
-                if (!s.endTimeStr) s.endTimeStr = currentEnd;
+            s.duration = newDurationMins * 60 * 1000;
+            s.multiplier = multVal;
+            s.status = 'modified';
+            s.modTime = nowStr;
+            s.calculatedStartTimeStr = editStartInput.padStart(5, '0');
+            s.calculatedEndTimeStr = editEndInput.padStart(5, '0');
 
-                sessions[index].duration = newDurationMins * 60 * 1000;
-                sessions[index].multiplier = Math.max(1, Math.min(10, parseInt(newMult)));
-                sessions[index].status = 'modified';
-                sessions[index].modTime = nowStr;
-                sessions[index].calculatedStartTimeStr = newStart.padStart(5, '0');
-                sessions[index].calculatedEndTimeStr = newEnd.padStart(5, '0');
-
-                localStorage.setItem('workSessions_v2', JSON.stringify(sessions));
-                updateUI();
-            }
+            localStorage.setItem('workSessions_v2', JSON.stringify(sessions));
+            updateUI();
+            closeEditModal();
         };
+
 
         window.deleteSession = function (index) {
             if (confirm('Eliminare?')) {
