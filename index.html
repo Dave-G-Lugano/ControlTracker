@@ -1052,20 +1052,27 @@
 
                 let statusLabel = '';
                 if (s.status === 'manual') statusLabel = '<span class="status-badge status-manual">AGGIUNTO MANUALMENTE</span>';
-                else if (s.status === 'modified') statusLabel = `<span class="status-badge status-modified">(modificato ${s.modTime})</span>`;
+                else if (s.status === 'modified') statusLabel = `<span class="status-badge status-modified" style="margin-top:2px; display:inline-block;">(modificato ${s.modTime})</span>`;
 
-                let timeRange = s.startTimeStr && s.endTimeStr ? `${s.startTimeStr} - ${s.endTimeStr}` : s.date;
-                if (s.status === 'modified' && s.calculatedEndTimeStr) {
-                    timeRange = `${s.startTimeStr} - ${s.endTimeStr} (${s.calculatedEndTimeStr})`;
+                let startDisplay = s.startTimeStr || '';
+                if (s.calculatedStartTimeStr && s.calculatedStartTimeStr !== s.startTimeStr) {
+                    startDisplay = `${s.startTimeStr} (<span style="font-weight:800; color:var(--danger);">${s.calculatedStartTimeStr}</span>)`;
                 }
+
+                let endDisplay = s.endTimeStr || '';
+                if (s.calculatedEndTimeStr && s.calculatedEndTimeStr !== s.endTimeStr) {
+                    endDisplay = `${s.endTimeStr} (<span style="font-weight:800; color:var(--danger);">${s.calculatedEndTimeStr}</span>)`;
+                }
+
+                let timeRange = startDisplay && endDisplay ? `${startDisplay} - ${endDisplay}` : s.date;
 
                 const item = document.createElement('div');
                 item.className = 'history-item';
                 item.innerHTML = `
                     <div class="history-info">
                         <div class="h-team">${s.team} ${multTag}</div>
-                        <div class="h-company">${s.company} ${statusLabel}</div>
-                        <div class="h-date">${timeRange}</div>
+                        <div class="h-company">${s.company} <br/> ${statusLabel}</div>
+                        <div class="h-date" style="margin-top:4px;">${timeRange}</div>
                     </div>
                     <div class="history-actions">
                         <span class="history-duration">${durationStr}</span>
@@ -1078,34 +1085,50 @@
 
         window.editSession = function (index) {
             const s = sessions[index];
-            const oldMins = Math.floor(s.duration / (1000 * 60));
             const oldMult = s.multiplier || 1;
 
-            const newMins = prompt(`Modifica minuti per ${s.company}:`, oldMins);
-            if (newMins === null) return;
+            const currentStart = s.calculatedStartTimeStr || s.startTimeStr || '00:00';
+            const currentEnd = s.calculatedEndTimeStr || s.endTimeStr || '00:00';
+
+            const newStart = prompt(`Modifica orario inizio (HH:MM) per ${s.company}:`, currentStart);
+            if (newStart === null) return;
+            if (!/^\d{1,2}:\d{2}$/.test(newStart)) {
+                alert("Formato ora inizio non valido.");
+                return;
+            }
+
+            const newEnd = prompt(`Modifica orario fine (HH:MM) per ${s.company}:`, currentEnd);
+            if (newEnd === null) return;
+            if (!/^\d{1,2}:\d{2}$/.test(newEnd)) {
+                alert("Formato ora fine non valido.");
+                return;
+            }
 
             const newMult = prompt(`Modifica numero controllori (1-10):`, oldMult);
             if (newMult === null) return;
 
-            if (newMins !== null && !isNaN(newMins) && !isNaN(newMult)) {
+            const [sh, sm] = newStart.split(':').map(Number);
+            const [eh, em] = newEnd.split(':').map(Number);
+
+            let startMins = sh * 60 + sm;
+            let endMins = eh * 60 + em;
+            if (endMins < startMins) endMins += 24 * 60; // if crosses midnight
+
+            const newDurationMins = endMins - startMins;
+
+            if (!isNaN(newDurationMins) && !isNaN(newMult)) {
                 const now = new Date();
                 const nowStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
-                // Calcolo nuovo orario di fine basato sullo start originale + nuovi minuti
-                let calcEndStr = '';
-                if (s.startTimeStr) {
-                    const [h, m] = s.startTimeStr.split(':').map(Number);
-                    const startDate = new Date();
-                    startDate.setHours(h, m, 0);
-                    const endDate = new Date(startDate.getTime() + parseInt(newMins) * 60000);
-                    calcEndStr = endDate.getHours().toString().padStart(2, '0') + ':' + endDate.getMinutes().toString().padStart(2, '0');
-                }
+                if (!s.startTimeStr) s.startTimeStr = currentStart;
+                if (!s.endTimeStr) s.endTimeStr = currentEnd;
 
-                sessions[index].duration = parseInt(newMins) * 60 * 1000;
+                sessions[index].duration = newDurationMins * 60 * 1000;
                 sessions[index].multiplier = Math.max(1, Math.min(10, parseInt(newMult)));
                 sessions[index].status = 'modified';
                 sessions[index].modTime = nowStr;
-                sessions[index].calculatedEndTimeStr = calcEndStr;
+                sessions[index].calculatedStartTimeStr = newStart.padStart(5, '0');
+                sessions[index].calculatedEndTimeStr = newEnd.padStart(5, '0');
 
                 localStorage.setItem('workSessions_v2', JSON.stringify(sessions));
                 updateUI();
