@@ -633,6 +633,11 @@
     <div id="edit-modal" class="manual-form-container">
         <div class="manual-form" style="padding: 15px;">
             <h2 style="margin-bottom: 10px; font-size: 1.1rem; text-align: center;">Modifica Sessione</h2>
+            
+            <div class="form-row" style="margin-bottom: 15px;">
+                <label style="font-size: 0.7rem; text-transform: uppercase;">Compagnia / Team</label>
+                <select id="edit-company-select" style="padding: 8px; font-size: 0.95rem;"></select>
+            </div>
 
             <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                 <div class="edit-field" id="edit-start-box" onclick="setEditFocus('start')"
@@ -1058,10 +1063,14 @@
                 return;
             }
             keys.sort().forEach(key => {
-                const hours = (totals[key] / (1000 * 60 * 60)).toFixed(2);
+                const totalMins = Math.floor(totals[key] / (1000 * 60));
+                const h = Math.floor(totalMins / 60);
+                const m = totalMins % 60;
+                const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                
                 const card = document.createElement('div');
                 card.className = 'stat-card';
-                card.innerHTML = `<div class="stat-name">${key}</div><div class="stat-value">${hours}h</div>`;
+                card.innerHTML = `<div class="stat-name">${key}</div><div class="stat-value">${timeStr}</div>`;
                 statsContainer.appendChild(card);
             });
         }
@@ -1146,6 +1155,22 @@
             editEndInput = s.calculatedEndTimeStr || s.endTimeStr || '00:00';
             editMultInput = (s.multiplier || 1).toString();
 
+            const editCompSelect = document.getElementById('edit-company-select');
+            editCompSelect.innerHTML = '';
+            for (const team in companiesByTeam) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = team;
+                companiesByTeam[team].forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    opt.dataset.team = team;
+                    if (c === s.company) opt.selected = true;
+                    optgroup.appendChild(opt);
+                });
+                editCompSelect.appendChild(optgroup);
+            }
+
             document.getElementById('edit-start-val').textContent = editStartInput;
             document.getElementById('edit-end-val').textContent = editEndInput;
             document.getElementById('edit-mult-val').textContent = editMultInput + 'x';
@@ -1222,6 +1247,11 @@
             const s = sessions[editingIndex];
             if (!s.startTimeStr) s.startTimeStr = editStartInput.padStart(5, '0');
             if (!s.endTimeStr) s.endTimeStr = editEndInput.padStart(5, '0');
+
+            const editCompSelect = document.getElementById('edit-company-select');
+            const selectedOption = editCompSelect.options[editCompSelect.selectedIndex];
+            s.company = selectedOption.value;
+            s.team = selectedOption.dataset.team;
 
             s.duration = newDurationMins * 60 * 1000;
             s.multiplier = multVal;
