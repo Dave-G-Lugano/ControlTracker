@@ -562,6 +562,9 @@
                 <button id="add-manual-btn" class="btn-text-only"
                     style="margin-top: 15px; opacity: 1; text-decoration: none; border: 2px solid #000; padding: 8px 15px; border-radius: 12px; font-size: 0.75rem;">➕
                     AGGIUNGI CONTROLLO MANUALE</button>
+                <button id="add-other-group-btn" class="btn-text-only"
+                    style="margin-top: 10px; opacity: 1; text-decoration: none; border: 2px dashed #000; padding: 8px 15px; border-radius: 12px; font-size: 0.75rem;">👥
+                    AGGIUNGI CONTEGGIO ALTRO GRUPPO</button>
             </section>
 
             <section class="stats-section">
@@ -572,6 +575,11 @@
             <section class="history-section">
                 <h2>Sessioni Recenti</h2>
                 <div id="history-list" class="history-list"></div>
+            </section>
+
+            <section class="other-groups-section" style="margin-top: 30px;">
+                <h2 style="font-size: 1.1rem; font-weight: 800; color: #000; margin-bottom: 15px; padding-left: 5px; text-transform: uppercase;">Sessioni Altri Gruppi</h2>
+                <div id="other-groups-list" class="history-list"></div>
             </section>
         </main>
 
@@ -625,6 +633,42 @@
             <div class="btn-group">
                 <button class="btn btn-cancel" onclick="closeManualModal()">ANNULLA</button>
                 <button class="btn btn-save" onclick="saveManualEntry()">SALVA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schermata Altri Gruppi -->
+    <div id="other-group-modal" class="manual-form-container">
+        <div class="manual-form">
+            <h2 style="margin-bottom: 20px; font-size: 1.2rem; text-align: center;">Aggiungi Altro Gruppo</h2>
+            <div class="form-row">
+                <label>Nome Gruppo</label>
+                <input type="text" id="og-name" placeholder="Es. Alfa, Bravo..." />
+            </div>
+            <div class="form-row">
+                <label>Team</label>
+                <select id="og-team-select">
+                    <option value="Lugano">Lugano</option>
+                    <option value="Bellinzona">Bellinzona</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Compagnia</label>
+                <select id="og-company-select"></select>
+            </div>
+            <div class="form-row" style="display: flex; gap: 10px;">
+                <div style="flex:1">
+                    <label>Ore</label>
+                    <input type="number" id="og-hours" min="0" max="24" value="0">
+                </div>
+                <div style="flex:1">
+                    <label>Minuti</label>
+                    <input type="number" id="og-minutes" min="0" max="59" value="0">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-cancel" onclick="closeOtherGroupModal()">ANNULLA</button>
+                <button class="btn btn-save" onclick="saveOtherGroup()">SALVA</button>
             </div>
         </div>
     </div>
@@ -767,6 +811,7 @@
         let startTime = 0;
         let elapsedTime = 0;
         let sessions = JSON.parse(localStorage.getItem('workSessions_v2')) || [];
+        let otherGroupsSessions = JSON.parse(localStorage.getItem('otherGroupsSessions_v1')) || [];
 
         const timerDisplay = document.getElementById('timer');
         const mainBtn = document.getElementById('main-btn');
@@ -777,12 +822,18 @@
         const multiplierSelect = document.getElementById('multiplier-select');
         const statsContainer = document.getElementById('stats-container');
         const historyList = document.getElementById('history-list');
+        const otherGroupsList = document.getElementById('other-groups-list');
         const resetBtn = document.getElementById('reset-data');
         const addManualBtn = document.getElementById('add-manual-btn');
+        const addOtherGroupBtn = document.getElementById('add-other-group-btn');
 
         const mModal = document.getElementById('manual-modal');
         const mTeam = document.getElementById('m-team-select');
         const mCompany = document.getElementById('m-company-select');
+
+        const ogModal = document.getElementById('other-group-modal');
+        const ogTeam = document.getElementById('og-team-select');
+        const ogCompany = document.getElementById('og-company-select');
 
         const lScreen = document.getElementById('lines-screen');
         const lTeam = document.getElementById('l-team-select');
@@ -796,8 +847,10 @@
         // Inizializzazione tendine
         teamSelect.addEventListener('change', updateCompanies);
         mTeam.addEventListener('change', () => updateCompaniesManual());
+        ogTeam.addEventListener('change', () => updateCompaniesOtherGroup());
         lTeam.addEventListener('change', () => updateCompaniesLines());
         addManualBtn.addEventListener('click', openManualModal);
+        addOtherGroupBtn.addEventListener('click', openOtherGroupModal);
         // Registrazione Service Worker per PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => { });
@@ -849,6 +902,18 @@
                 opt.value = c;
                 opt.textContent = c;
                 mCompany.appendChild(opt);
+            });
+        }
+
+        function updateCompaniesOtherGroup() {
+            const team = ogTeam.value;
+            const list = companiesByTeam[team];
+            ogCompany.innerHTML = '';
+            list.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                ogCompany.appendChild(opt);
             });
         }
 
@@ -1047,6 +1112,7 @@
         function updateUI() {
             updateStats();
             updateHistory();
+            updateOtherGroupsHistory();
         }
 
         function updateStats() {
@@ -1055,6 +1121,10 @@
                 const key = `${s.team} - ${s.company}`;
                 const weightedDuration = s.duration * (s.multiplier || 1);
                 totals[key] = (totals[key] || 0) + weightedDuration;
+            });
+            otherGroupsSessions.forEach(s => {
+                const key = `${s.team} - ${s.company}`;
+                totals[key] = (totals[key] || 0) + s.duration;
             });
             statsContainer.innerHTML = '';
             const keys = Object.keys(totals);
@@ -1275,11 +1345,95 @@
         };
 
         function clearData() {
-            if (confirm('Cancellare tutto?')) {
+            if (confirm('Cancellare tutto? Anche i conteggi degli altri gruppi verranno eliminati.')) {
                 sessions = [];
+                otherGroupsSessions = [];
                 localStorage.removeItem('workSessions_v2');
+                localStorage.removeItem('otherGroupsSessions_v1');
                 updateUI();
             }
+        }
+
+        function openOtherGroupModal() {
+            updateCompaniesOtherGroup();
+            document.getElementById('og-name').value = '';
+            document.getElementById('og-hours').value = '0';
+            document.getElementById('og-minutes').value = '0';
+            ogModal.style.display = 'flex';
+        }
+
+        window.closeOtherGroupModal = function() {
+            ogModal.style.display = 'none';
+        }
+
+        window.saveOtherGroup = function() {
+            const name = document.getElementById('og-name').value.trim();
+            const h = parseInt(document.getElementById('og-hours').value) || 0;
+            const m = parseInt(document.getElementById('og-minutes').value) || 0;
+            const totalMs = (h * 60 + m) * 60 * 1000;
+
+            if (!name) {
+                alert('Inserisci il nome del gruppo.');
+                return;
+            }
+            if (totalMs <= 0) {
+                alert('Inserisci una durata valida maggiore di zero.');
+                return;
+            }
+
+            const session = {
+                id: Date.now(),
+                groupName: name,
+                team: ogTeam.value,
+                company: ogCompany.value,
+                duration: totalMs,
+                date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }),
+                fullDate: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+            };
+
+            otherGroupsSessions.unshift(session);
+            if (otherGroupsSessions.length > 50) otherGroupsSessions.pop();
+            localStorage.setItem('otherGroupsSessions_v1', JSON.stringify(otherGroupsSessions));
+            
+            closeOtherGroupModal();
+            updateUI();
+        }
+
+        window.deleteOtherGroup = function(index) {
+            if (confirm('Eliminare conteggio di ' + otherGroupsSessions[index].groupName + '?')) {
+                otherGroupsSessions.splice(index, 1);
+                localStorage.setItem('otherGroupsSessions_v1', JSON.stringify(otherGroupsSessions));
+                updateUI();
+            }
+        };
+
+        function updateOtherGroupsHistory() {
+            otherGroupsList.innerHTML = '';
+            if (otherGroupsSessions.length === 0) {
+                otherGroupsList.innerHTML = '<p style="text-align: center; color: #000; font-size: 0.9rem; font-weight: 700;">Nessun conteggio aggiunto</p>';
+                return;
+            }
+
+            otherGroupsSessions.slice(0, 10).forEach((s, index) => {
+                const totalMins = Math.floor(s.duration / (1000 * 60));
+                const h = Math.floor(totalMins / 60);
+                const m = totalMins % 60;
+                const durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="history-info">
+                        <div class="h-team">${s.team} <span class="status-badge" style="background: #e63946; color: white;">GRUPPO: ${s.groupName}</span></div>
+                        <div class="h-company">${s.company}</div>
+                        <div class="h-date" style="margin-top:4px;">${s.date}</div>
+                    </div>
+                    <div class="history-actions">
+                        <span class="history-duration">${durationStr}</span>
+                        <button class="action-btn delete-btn" onclick="deleteOtherGroup(${index})">🗑️</button>
+                    </div>`;
+                otherGroupsList.appendChild(item);
+            });
         }
     </script>
 </body>
